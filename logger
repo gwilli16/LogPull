@@ -1,0 +1,45 @@
+import netmiko
+import os
+import datetime
+
+dt = str(datetime.datetime.now())
+connection = netmiko.ConnectHandler(ip='XXXXXX', device_type='cisco_ios', username='XXXX', password='XXXXX', secret='XXXXXX')
+
+
+connection.enable()
+logs = connection.send_command_timing('show logging')
+clear = connection.send_command_timing('clear logging')
+if 'confirm' in clear:
+    clear += connection.send_command_timing("y", strip_prompt=False, strip_command=False)
+connection.disconnect()
+
+
+rlogfile = open('readlogs.txt', 'w')
+rlogfile.write(logs)
+rlogfile.close()
+
+rlogfile = open('readlogs.txt', 'r')
+readlog = rlogfile.readlines()
+rlogfile.close()
+
+for i, x in enumerate(readlog):
+    if "Log Buffer" in x:
+        z = i
+        break
+
+
+xyz = (readlog[z:])
+
+logfile = open('logs.txt', 'a+')
+logfile.write('\n'*2)
+logfile.write('--'*5)
+logfile.write('\n')
+logfile.write(dt)
+logfile.write('\n')
+logfile.write('--'*5)
+logfile.write('\n'*2)
+for line in xyz:
+    logfile.write(line)
+logfile.close()
+
+os.remove('readlogs.txt')
